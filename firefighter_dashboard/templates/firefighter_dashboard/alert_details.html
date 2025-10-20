@@ -1,0 +1,327 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interventions Actives ({{ alert_count }}) | Dashboard Pompier</title>
+    <!-- Chargement de Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Définition d'une police professionnelle */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* light gray background */
+        }
+        /* Style pour la ligne verticale de couleur sur la gauche des alertes */
+        .border-l-6 {
+            border-left-width: 6px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- 🚨 ASTUCE POUR LE CDN : DÉCLARATION EXPLICITE DES CLASSES DYNAMIQUES 🚨 -->
+<div class="hidden">
+    <!-- Couleurs de bordure des cartes -->
+    <div class="border-red-600 border-yellow-600"></div>
+    <!-- Couleurs de fond des cartes -->
+    <div class="bg-red-50 bg-yellow-50"></div>
+    <!-- Couleurs des tags (Statut) -->
+    <div class="bg-red-200 text-red-800 bg-yellow-200 text-yellow-800 bg-green-200 text-green-800"></div>
+    <!-- Couleurs de texte spécifiques -->
+    <div class="text-blue-600 text-red-600"></div>
+</div>
+<!-- FIN ASTUCE -->
+
+
+<!-- 🟥 BARRE DE NAVIGATION (MENU) 🟥 -->
+<nav class="bg-gray-800 shadow-xl sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            
+            <!-- Logo ou Nom de l'App -->
+            <div class="flex-shrink-0">
+                <span class="text-white text-xl font-bold tracking-wider flex items-center">
+                    <svg class="w-6 h-6 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    SDIS Dashboard
+                </span>
+            </div>
+
+            <!-- Liens de Navigation (Visible sur Desktop) -->
+               <div class="hidden md:block">
+                <div class="ml-10 flex items-baseline space-x-4">
+                                        <!-- Dashboard Actif -->
+                    <a href="{% url 'dashboard_intervention' %}" class="px-3 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition duration-150">
+                        <span class="font-extrabold">🚨 Tableau de board</span>
+                    </a>
+
+                    <!-- Ressources & équipe -->
+                    <a href="{% url 'dashboard_resources' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150">
+                        Ressources & équipe
+                    </a>
+
+                    <!-- Profil -->
+                    <a href="{% url 'dashboard_profile' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150">
+                        Profil
+                    </a>
+
+                    <!-- Déconnexion (Utilisation d'un lien temporaire car le nom d'URL n'est pas fourni dans urlpatterns) -->
+                    <form method="post" action="{% url 'logout' %}" class="inline">
+                        <!-- 🚨 Le jeton CSRF est obligatoire pour toute requête POST 🚨 -->
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                            Déconnexion
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bouton Menu Mobile (Hamburger) -->
+            <div class="md:hidden">
+                <button id="menu-toggle" type="button" class="bg-gray-700 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+                    <span class="sr-only">Ouvrir le menu principal</span>
+                    <!-- Icone Hamburger -->
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Menu Mobile (Masqué par défaut) -->
+    <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+           <a href="{% url 'dashboard_intervention' %}" class="block px-3 py-2 rounded-md text-base font-medium text-white bg-red-600 hover:bg-red-700 transition duration-150">
+                <span class="font-extrabold">🚨 Tableau de board</span>
+            </a>
+            
+            <!-- 2. Ressources & Équipe (Mobile) -->
+            <a href="{% url 'dashboard_resources' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition duration-150">
+                Ressources & équipe
+            </a>
+            
+            <!-- 3. Profil (Mobile) -->
+            <a href="{% url 'dashboard_profile' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition duration-150">
+                Profil
+            </a>
+            
+            <!-- 4. Déconnexion (Mobile - POST Requis) -->
+            <form method="post" action="{% url 'logout' %}" class="block">
+                {% csrf_token %}
+                <button type="submit" 
+                        class="w-full text-left text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-base font-medium transition duration-150">
+                    Déconnexion
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+    
+<!-- 🚨 ASTUCE POUR LE CDN : DÉCLARATION EXPLICITE DES CLASSES DYNAMIQUES 🚨 -->
+<div class="hidden hidden-classes"></div>
+<!-- FIN ASTUCE -->
+
+
+<!-- Contenu Principal -->
+<div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- Lien Retour -->
+    <a href="{% url 'dashboard_intervention' %}" class="text-blue-600 hover:text-blue-800 text-sm mb-6 inline-flex items-center font-medium transition duration-150">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 transform -translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Retour au Tableau de Bord
+    </a>
+
+    <!-- Titre Principal de la Page -->
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6">
+        Gestion de l'Alerte #{{ alert.id }}
+    </h1>
+
+    <!-- Messages Flash -->
+    {% if messages %}
+        <div class="mb-6">
+        {% for message in messages %}
+            <div class="p-4 rounded-lg shadow-md mb-2
+                {% if message.tags == 'success' %}bg-green-100 border-l-4 border-green-500 text-green-700
+                {% elif message.tags == 'error' %}bg-red-100 border-l-4 border-red-500 text-red-700
+                {% else %}bg-blue-100 border-l-4 border-blue-500 text-blue-700{% endif %}">
+                <p class="font-medium">{{ message }}</p>
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Layout RESPONSIVE (STACKED ON MOBILE, SIDE-BY-SIDE ON MD+) -->
+    <div class="flex flex-col md:flex-row md:space-x-6 space-y-6 md:space-y-0">
+        
+        <!-- Colonne de Gauche : Détails et Médias -->
+        <div class="w-full md:w-2/3 space-y-6">
+            
+            <!-- Widget : Informations Clés de l'Alerte -->
+            <div class="bg-white rounded-xl shadow-2xl p-6 border border-gray-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4">
+                    <h2 class="text-3xl font-extrabold text-red-700 mb-2 sm:mb-0">
+                        {{ alert.get_fire_type_display }}
+                    </h2>
+                    <span class="px-4 py-1.5 text-base font-bold rounded-full shadow-inner uppercase 
+                        {% if alert.status == 'NOUVEAU' %}bg-red-200 text-red-800
+                        {% elif alert.status == 'EN_COURS' %}bg-yellow-200 text-yellow-800
+                        {% elif alert.status == 'RESOLU' %}bg-green-200 text-green-800
+                        {% else %}bg-gray-200 text-gray-800{% endif %}">
+                        {{ alert.get_status_display }}
+                    </span>
+                </div>
+
+                <!-- Grille de Détails (Responsive) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-gray-700 text-sm mb-6">
+                    <!-- Date Signalement -->
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="font-semibold text-gray-500 mb-0.5">Signalé à :</p>
+                        <p class="font-medium">{{ alert.reported_at|date:"d M Y H:i:s" }}</p>
+                    </div>
+                    <!-- Date Prise en Charge -->
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="font-semibold text-gray-500 mb-0.5">Pris en charge à :</p>
+                        <p class="font-medium">{{ alert.started_at|date:"H:i:s"|default:"N/A" }}</p>
+                    </div>
+                    <!-- Localisation -->
+                    <div class="p-3 bg-gray-50 rounded-lg col-span-1 md:col-span-2">
+                        <p class="font-semibold text-gray-500 mb-0.5">Localisation (Lat/Lon) :</p>
+                        <p class="font-medium">{{ alert.latitude }}, {{ alert.longitude }}</p>
+                    </div>
+                    <!-- Durée/Résolution -->
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="font-semibold text-gray-500 mb-0.5">Heure de Résolution :</p>
+                        {% if alert.resolved_at %}
+                            <p class="font-medium">{{ alert.resolved_at|date:"H:i:s" }}</p>
+                            <p class="text-xs text-gray-500">Total : Calcul de la durée...</p>
+                        {% else %}
+                            <p class="text-yellow-600 font-medium">Intervention en cours</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="border-t border-gray-200 pt-4 mt-4">
+                    <h3 class="text-lg font-bold mb-2 text-gray-800">Description du Citoyen</h3>
+                    <p class="text-gray-700 bg-gray-50 p-4 rounded-lg italic border border-gray-200">
+                        {{ alert.description|default:"Aucune description fournie par le citoyen." }}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Widget : Photo de Signalement (si présente) -->
+            {% if alert.image %}
+            <div class="bg-white rounded-xl shadow-2xl p-6 border border-gray-200">
+                <h3 class="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Photo du Signalement
+                </h3>
+                <!-- Assurez-vous que l'image est aussi responsive -->
+                <img src="{{ alert.image.url }}" alt="Preuve de l'alerte" class="rounded-lg w-full max-h-[50vh] object-contain border border-gray-300 shadow-lg">
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Colonne de Droite : Actions et Assignation -->
+        <div class="w-full md:w-1/3 space-y-6">
+            
+            <!-- Widget : Assignation & Prise en Charge -->
+            <div class="bg-white rounded-xl shadow-2xl p-5 border-t-4 border-blue-600">
+                <h3 class="text-xl font-bold mb-3 text-blue-800 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.146M11.5 16.5h.01"></path></svg>
+                    Assignation
+                </h3>
+                
+                <p class="text-sm text-gray-600 mb-4">
+                    Pompier Assigné : 
+                    <span class="font-bold text-gray-900">
+                        {{ alert.assigned_firefighter.username|default:"AUCUN" }}
+                    </span>
+                </p>
+
+                {% if alert.status == 'NOUVEAU' %}
+                <form method="POST" action="{% url 'alert_action' alert_id=alert.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="take_over">
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition duration-150 transform hover:scale-[1.02]">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Prendre en Charge
+                        </span>
+                    </button>
+                </form>
+                {% elif alert.status == 'EN_COURS' and alert.assigned_firefighter == request.user %}
+                <div class="p-3 bg-blue-100 border border-blue-300 rounded-lg text-blue-800 text-sm font-medium text-center">
+                    Vous êtes l'intervenant actif sur cette alerte.
+                </div>
+                {% elif alert.assigned_firefighter and alert.assigned_firefighter != request.user and alert.status == 'EN_COURS' %}
+                <div class="p-3 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800 text-sm font-medium text-center">
+                    Actuellement gérée par {{ alert.assigned_firefighter.username }}.
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500 text-center p-2 bg-gray-100 rounded-lg">Alerte clôturée ou non assignable.</p>
+                {% endif %}
+            </div>
+
+            <!-- Widget : Actions de Fin d'Intervention -->
+            {% if alert.status == 'EN_COURS' and alert.assigned_firefighter == request.user %}
+            <div class="bg-white rounded-xl shadow-2xl p-5 border-t-4 border-green-600">
+                <h3 class="text-xl font-bold mb-4 text-green-800">Clôture de l'Intervention</h3>
+                <form method="POST" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_status">
+                    
+                    {% for choice in status_choices %}
+                    <!-- On ne montre que les choix de fin d'intervention -->
+                    {% if choice.code == 'RESOLU' or choice.code == 'FAUSSE_ALERTE' %}
+                    <button type="submit" name="new_status" value="{{ choice.code }}" 
+                            class="w-full font-bold py-3 px-4 rounded-xl transition duration-150 transform hover:scale-[1.02] shadow-md
+                            {% if choice.code == 'RESOLU' %}bg-green-600 hover:bg-green-700 text-white
+                            {% elif choice.code == 'FAUSSE_ALERTE' %}bg-red-500 hover:bg-red-600 text-white
+                            {% endif %}">
+                        {{ choice.display }}
+                    </button>
+                    {% endif %}
+                    {% endfor %}
+                </form>
+            </div>
+            {% endif %}
+            
+            <!-- Widget : Allocation de Ressources (Exemple de futur développement) -->
+            <div class="bg-white rounded-xl shadow-2xl p-5 border-t-4 border-yellow-600">
+                <h3 class="text-xl font-bold mb-3 text-yellow-800 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l-2 2-2-2m6 13h5.5l.5-.5V14h-6v5z"></path></svg>
+                    Allocation de Véhicule
+                </h3>
+                <p class="text-sm text-gray-500">
+                    Cette section permettra de lier un véhicule à l'alerte pour le suivi des ressources. (À implémenter)
+                </p>
+                <!-- Formulaire de sélection de véhicule à venir -->
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Gestion de l'affichage du menu mobile (Hamburger)
+    document.getElementById('menu-toggle').addEventListener('click', function() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.remove('hidden');
+        } else {
+            mobileMenu.classList.add('hidden');
+        }
+    });
+</script>
+
+</body>
+</html>

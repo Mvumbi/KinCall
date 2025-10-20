@@ -1,0 +1,262 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signaler un Incendie | Kinshasa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Styles pour les champs Django */
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .form-input:focus {
+            border-color: #ef4444; /* red-500 */
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-red-50 min-h-screen p-0 md:p-4">
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- MENU DE NAVIGATION (Responsive avec Hamburger) -->
+    <!-- --------------------------------------------------------------------- -->
+    <nav class="bg-red-700 shadow-xl w-full sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo/Nom de l'Application -->
+                <div class="flex-shrink-0">
+                    <a href="{% url 'citizen_report'%}" class="text-white font-extrabold text-xl tracking-wider">
+                        KinCall <span class="text-red-300">| CITOYEN</span>
+                    </a>
+                </div>
+
+                <!-- Liens pour Desktop (Affichés au-dessus de 'sm') -->
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <a href="{% url 'citizen_report' %}" class="text-red-200 hover:bg-red-600 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150">
+                        Accueil
+                    </a>
+                    <a href="{% url 'history' %}" class="text-red-200 hover:bg-red-600 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150">
+                        Historique Alertes
+                    </a>
+                    <form method="post" action="{% url 'logout' %}" class="ml-4">
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="bg-red-800 text-white hover:bg-red-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150 shadow-md">
+                            Déconnexion
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Bouton Hamburger (Affiché seulement sur mobile) -->
+                <div class="sm:hidden">
+                    <button id="menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-red-200 hover:text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only">Ouvrir le menu principal</span>
+                        <!-- Icône fermée (Hamburger) -->
+                        <svg id="menu-icon-closed" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <!-- Icône ouverte (Croix) -->
+                        <svg id="menu-icon-open" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Mobile (Initialement caché) -->
+        <div class="sm:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="{% url 'citizen_report' %}" class="text-white block px-3 py-2 rounded-md text-base font-medium bg-red-600">Accueil</a>
+                <a href="{% url 'history' %}" class="text-red-200 hover:bg-red-600 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Historique Alertes</a>
+                <form method="post" action="{% url 'logout' %}" class="pt-2">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="w-full text-left bg-red-800 text-white hover:bg-red-900 px-3 py-2 rounded-md text-base font-medium transition duration-150 shadow-md">
+                        Déconnexion
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <!-- --------------------------------------------------------------------- -->
+    <!-- CONTENU PRINCIPAL CENTRÉ -->
+    <!-- --------------------------------------------------------------------- -->
+    <div class="flex items-center justify-center p-4">
+        <div class="w-full max-w-lg p-8 space-y-6 bg-white rounded-xl shadow-2xl border-t-8 border-red-600 mt-8">
+            <h1 class="text-3xl font-extrabold text-red-700 text-center">
+                🔥 Alerte Incendie Immédiate
+            </h1>
+            <p class="text-center text-gray-600">
+                Remplissez les détails et cliquez sur **"Alerter les Pompiers"**. Votre localisation sera envoyée automatiquement.
+            </p>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="p-3 text-sm rounded-lg bg-red-100 text-red-700 font-medium">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" id="alert-form" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                {# --------------------------------------------------------------------- #}
+                {# CHAMP fire_type (Select) #}
+                {# --------------------------------------------------------------------- #}
+                <div>
+                    <label for="id_fire_type" class="block text-sm font-medium text-gray-700 mb-1">Type d'Incendie (Où se passe le feu ?)</label>
+                    {{ form.fire_type }}
+                    {% for error in form.fire_type.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                {# --------------------------------------------------------------------- #}
+                {# CHAMP photo (File Input) #}
+                {# --------------------------------------------------------------------- #}
+                <div>
+                    <label for="id_photo" class="block text-sm font-medium text-gray-700 mb-1">Prendre une Photo (Optionnel)</label>
+                    <input type="file" name="{{ form.photo.name }}" id="id_photo" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"/>
+                    {% for error in form.photo.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                
+                {# --------------------------------------------------------------------- #}
+                {# CHAMP description (Textarea) #}
+                {# --------------------------------------------------------------------- #}
+                <div>
+                    <label for="id_description" class="block text-sm font-medium text-gray-700 mb-1">Détails (Optionnel)</label>
+                    {{ form.description }}
+                    {% for error in form.description.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                {# --------------------------------------------------------------------- #}
+                {# CHAMPS CACHÉS (latitude, longitude) #}
+                {# --------------------------------------------------------------------- #}
+                {{ form.latitude }}
+                {{ form.longitude }}
+
+                {# 🎯 AFFICHAGE DES ERREURS GPS EN DESSOUS (CRITIQUE !) #}
+                {% for error in form.latitude.errors %}
+                    <p class="text-red-500 text-sm mt-2 font-bold p-2 bg-red-100 rounded-lg">⚠️ Erreur GPS (Latitude) : {{ error }}</p>
+                {% endfor %}
+                {% for error in form.longitude.errors %}
+                    <p class="text-red-500 text-sm mt-2 font-bold p-2 bg-red-100 rounded-lg">⚠️ Erreur GPS (Longitude) : {{ error }}</p>
+                {% endfor %}
+                {# --------------------------------------------------------------------- #}
+
+
+                <button type="submit" id="submit-button" disabled
+                        class="w-full flex justify-center py-4 px-4 border border-transparent 
+                                rounded-lg shadow-lg text-lg font-bold text-white 
+                                bg-red-600 hover:bg-red-800 focus:outline-none focus:ring-2 
+                                focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out disabled:bg-red-300">
+                    🚨 ALERTER LES POMPIERS MAINTENANT
+                </button>
+                <p id="geo-status" class="text-center text-sm text-yellow-600 font-medium p-1">
+                    Statut : Localisation en attente...
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const latInput = document.getElementById('id_latitude');
+        const lonInput = document.getElementById('id_longitude');
+        const submitButton = document.getElementById('submit-button');
+        const geoStatus = document.getElementById('geo-status');
+        
+        // --- LOGIQUE DU MENU HAMBURGER ---
+        const menuButton = document.getElementById('menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const iconClosed = document.getElementById('menu-icon-closed');
+        const iconOpen = document.getElementById('menu-icon-open');
+
+        menuButton.addEventListener('click', () => {
+            const isExpanded = menuButton.getAttribute('aria-expanded') === 'true';
+            menuButton.setAttribute('aria-expanded', !isExpanded);
+            
+            // Toggle visibility of the mobile menu
+            mobileMenu.classList.toggle('hidden');
+            
+            // Toggle icons (Hamburger -> Cross, or Cross -> Hamburger)
+            iconClosed.classList.toggle('hidden');
+            iconOpen.classList.toggle('hidden');
+        });
+        // ---------------------------------
+
+
+        // Met à jour le message de statut et l'état du bouton
+        function updateGeoStatus(message, isSuccess = false) {
+            geoStatus.textContent = `Statut : ${message}`;
+            if (isSuccess) {
+                geoStatus.className = 'text-center text-sm text-green-600 font-medium p-1';
+                submitButton.disabled = false;
+            } else {
+                geoStatus.className = 'text-center text-sm text-yellow-600 font-medium p-1';
+                submitButton.disabled = true;
+            }
+        }
+
+        // Fonction de succès de la géolocalisation
+        function geoSuccess(position) {
+            latInput.value = position.coords.latitude;
+            lonInput.value = position.coords.longitude;
+            updateGeoStatus("Localisation GPS reçue. Prêt à alerter.", true);
+        }
+
+        // Fonction d'erreur de la géolocalisation
+        function geoError(error) {
+            let message = "Erreur de géolocalisation. Veuillez autoriser l'accès à votre position.";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = "Accès à la géolocalisation refusé par l'utilisateur.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = "Informations de localisation non disponibles.";
+                    break;
+                case error.TIMEOUT:
+                    message = "La demande de localisation a expiré.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    message = "Une erreur inconnue de géolocalisation est survenue.";
+                    break;
+            }
+            // On affiche le message d'erreur GPS, mais on garde le bouton désactivé
+            updateGeoStatus(`⚠️ ${message} (Erreur ${error.code})`);
+        }
+
+        // Options de géolocalisation
+        const geoOptions = {
+            enableHighAccuracy: true,
+            timeout: 100000, // 10 secondes
+            maximumAge: 0
+        };
+
+        // Démarrage de la géolocalisation au chargement de la page
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(geoSuccess, geoError, geoOptions);
+            updateGeoStatus("Localisation en cours...");
+        } else {
+            updateGeoStatus("Votre navigateur ne supporte pas la géolocalisation.");
+        }
+    </script>
+</body>
+</html>

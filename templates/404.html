@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur 404 | Page Non Trouvée</title>
+    <!-- Chargement de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Configuration de la police Inter */
+        html { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="max-w-xl w-full bg-white shadow-2xl rounded-xl p-8 md:p-12 text-center border border-gray-100 transition-all duration-300 transform hover:scale-[1.01] hover:shadow-3xl">
+        
+        <!-- Code d'Erreur 404 -->
+        <h1 class="text-9xl font-extrabold text-red-600 tracking-wider mb-4 animate-pulse-slow">
+            404
+        </h1>
+
+        <!-- Titre principal -->
+        <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            Page Non Trouvée
+        </h2>
+        
+        <!-- Description -->
+        <p class="text-lg text-gray-600 mb-8">
+            Désolé, nous n'avons pas pu trouver la page que vous recherchez. Elle pourrait avoir été déplacée ou supprimée.
+        </p>
+
+        <!-- Animation/Illustration Simple (Utilisation d'icônes SVG pour éviter les dépendances externes) -->
+        <div class="flex justify-center mb-10">
+            <svg class="w-20 h-20 text-blue-500 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+
+        <!-- Bouton d'Action -->
+        <a href="/" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 transition duration-150 ease-in-out transform hover:-translate-y-0.5">
+            Retourner à l'Accueil
+        </a>
+    </div>
+
+    <!-- Script pour une petite animation simple (non essentielle pour un 404, mais ajoutée pour le style) -->
+    <script>
+        // Placeholder pour les scripts futurs, par exemple pour le suivi d'erreurs.
+        // Aucune logique complexe n'est nécessaire ici pour un simple affichage 404.
+        const errorElement = document.querySelector('.animate-pulse-slow');
+        if (errorElement) {
+            // Petite variation de couleur au survol pour un effet de style
+            errorElement.addEventListener('mouseenter', () => {
+                errorElement.classList.remove('text-red-600');
+                errorElement.classList.add('text-red-700');
+            });
+            errorElement.addEventListener('mouseleave', () => {
+                errorElement.classList.remove('text-red-700');
+                errorElement.classList.add('text-red-600');
+            });
+        }
+    </script>
+</body>
+</html>

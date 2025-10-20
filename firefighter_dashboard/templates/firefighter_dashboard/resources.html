@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord des Opérations SDIS</title>
+    <!-- Chargement de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuration de Tailwind pour la police Inter -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Fond très léger */
+        }
+        /* Style pour les en-têtes de section */
+        .header-section {
+            display: flex;
+            align-items: center;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid;
+        }
+        /* Cache la section JS au chargement pour éviter le FOUC */
+        #data-container {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #data-container.loaded {
+            opacity: 1;
+        }
+    </style>
+    <!-- Configuration des couleurs personnalisées de Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1d4ed8', // Blue-700
+                        secondary: '#ef4444', // Red-500
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- 🟥 BARRE DE NAVIGATION (MENU) 🟥 -->
+    <nav class="bg-gray-800 shadow-xl sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                
+                <!-- Logo ou Nom de l'App -->
+                <div class="flex-shrink-0">
+                    <span class="text-white text-xl font-bold tracking-wider flex items-center">
+                        <svg class="w-6 h-6 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        SDIS Dashboard
+                    </span>
+                </div>
+
+                <!-- Liens de Navigation (Visible sur Desktop) -->
+     <div class="hidden md:block">
+                <div class="ml-10 flex items-baseline space-x-4">
+                                        <!-- Dashboard Actif -->
+                    <a href="{% url 'dashboard_intervention' %}" class="px-3 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition duration-150">
+                        <span class="font-extrabold">🚨 Tableau de board</span>
+                    </a>
+
+                    <!-- Ressources & équipe -->
+                    <a href="{% url 'dashboard_resources' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150">
+                        Ressources & équipe
+                    </a>
+
+                    <!-- Profil -->
+                    <a href="{% url 'dashboard_profile' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150">
+                        Profil
+                    </a>
+
+                    <!-- Déconnexion (Utilisation d'un lien temporaire car le nom d'URL n'est pas fourni dans urlpatterns) -->
+                    <form method="post" action="{% url 'logout' %}" class="inline">
+                        <!-- 🚨 Le jeton CSRF est obligatoire pour toute requête POST 🚨 -->
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                            Déconnexion
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+                <!-- Bouton Menu Mobile (Hamburger) -->
+                <div class="md:hidden">
+                    <button id="menu-toggle" type="button" class="bg-gray-700 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only">Ouvrir le menu principal</span>
+                        <!-- Icone Hamburger -->
+                        <svg class="h-6 w-6" id="menu-icon-open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                         <!-- Icone Fermer (Masquée par défaut) -->
+                        <svg class="hidden h-6 w-6" id="menu-icon-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Menu Mobile (Masqué par défaut) -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="{% url 'dashboard_intervention' %}" class="block px-3 py-2 rounded-md text-base font-medium text-white bg-red-600 hover:bg-red-700 transition duration-150">
+                <span class="font-extrabold">🚨 Tableau de board</span>
+            </a>
+            
+            <!-- 2. Ressources & Équipe (Mobile) -->
+            <a href="{% url 'dashboard_resources' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition duration-150">
+                Ressources & équipe
+            </a>
+            
+            <!-- 3. Profil (Mobile) -->
+            <a href="{% url 'dashboard_profile' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition duration-150">
+                Profil
+            </a>
+            
+            <!-- 4. Déconnexion (Mobile - POST Requis) -->
+            <form method="post" action="{% url 'logout' %}" class="block">
+                {% csrf_token %}
+                <button type="submit" 
+                        class="w-full text-left text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-base font-medium transition duration-150">
+                    Déconnexion
+                </button>
+            </form>
+            </div>
+        </div>
+    </nav>
+    <!-- 🟥 FIN BARRE DE NAVIGATION 🟥 -->
+    <div class="container mx-auto p-4 sm:p-8 lg:p-12">
+
+        <!-- --- SECTION 1: PARC AUTOMOBILE --- -->
+        
+        <div class="header-section border-red-300">
+            <h2 class="text-3xl font-extrabold text-secondary">
+                <span class="mr-2">🚨</span> Parc Automobile
+            </h2>
+        </div>
+        
+        <!-- Conteneur des cartes des véhicules -->
+        <div id="vehicle-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-12">
+            
+            {% for vehicle in vehicles %}
+                
+                <!-- Carte du Véhicule - Correction des classes conditionnelles -->
+                <div class="bg-white p-6 rounded-2xl shadow-xl transition duration-300 ease-in-out hover:shadow-2xl border-l-8 
+                    {% if vehicle.status == 'DISPONIBLE' %}border-green-500
+                    {% elif vehicle.status == 'EN_MISSION' %}border-red-500
+                    {% else %}border-yellow-500
+                    {% endif %}">
+                    
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-2xl font-extrabold mb-1 text-gray-900">{{ vehicle.name }}</div>
+                            <p class="text-sm text-gray-500 font-medium">
+                                {{ vehicle.get_vehicle_type_display }} ({% if vehicle.capacity %}{{ vehicle.capacity }} L{% else %}N/A{% endif %})
+                            </p>
+                        </div>
+                        
+                        <!-- Badge Statut - Correction des classes conditionnelles -->
+                        <span class="inline-block px-4 py-1 text-xs font-bold rounded-full uppercase tracking-wider 
+                            {% if vehicle.status == 'DISPONIBLE' %}bg-green-50 text-green-700
+                            {% elif vehicle.status == 'EN_MISSION' %}bg-red-50 text-red-700 animate-pulse
+                            {% else %}bg-yellow-50 text-yellow-700
+                            {% endif %}">
+                            {{ vehicle.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <hr class="my-4 border-gray-100">
+
+                    {% if vehicle.latitude and vehicle.longitude %}
+                        <p class="text-xs text-gray-500 mt-3 flex items-center">
+                            <svg class="w-4 h-4 mr-1 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            Dernière position : {{ vehicle.latitude|floatformat:4 }}, {{ vehicle.longitude|floatformat:4 }}
+                        </p>
+                    {% else %}
+                        <p class="text-xs text-gray-400 mt-3 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                            Position non disponible
+                        </p>
+                    {% endif %}
+                </div>
+            
+            {% empty %}
+                <p class="col-span-full text-gray-500 text-center py-4">Aucun véhicule n'a été enregistré.</p>
+            {% endfor %}
+            
+        </div>
+
+        <!-- --- SECTION 2: AGENTS EN SERVICE --- -->
+
+        <div class="header-section border-blue-300">
+            <h2 class="text-3xl font-extrabold text-primary">
+                <span class="mr-2">👨‍🚒</span> Agents en Service
+            </h2>
+        </div>
+
+        <!-- Conteneur du tableau (responsive grâce à overflow-x-auto) -->
+        <div class="overflow-x-auto bg-white rounded-2xl shadow-2xl shadow-indigo-100/50">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-indigo-50">
+                    <tr>
+                        <th class="py-4 px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Agent
+                        </th>
+                        <th class="py-4 px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Grade
+                        </th>
+                        <th class="py-4 px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Statut de Service
+                        </th>
+                        <th class="py-4 px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            Véhicule Assigné
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    
+                    {% for profile in firefighters %}
+                        
+                        <tr class="border-b border-gray-100 hover:bg-indigo-50/50 transition duration-150">
+                            <td class="py-4 px-6 whitespace-nowrap font-semibold text-sm text-gray-900">
+                                {{ profile.user.get_full_name|default:profile.user.username }}
+                            </td>
+                            <td class="py-4 px-6 whitespace-nowrap text-sm text-gray-600">
+                                {{ profile.get_rank_display }}
+                            </td>
+                            <td class="py-4 px-6 whitespace-nowrap">
+                                <!-- Badge Statut de Service - Correction des classes conditionnelles -->
+                                <span class="py-1 px-3 text-xs font-bold rounded-full uppercase tracking-wider 
+                                    {% if profile.shift_status == 'EN_SERVICE' %}bg-blue-100 text-blue-800
+                                    {% elif profile.shift_status == 'EN_PAUSE' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-600
+                                    {% endif %}">
+                                    {{ profile.get_shift_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 whitespace-nowrap text-sm 
+                                {% if profile.assigned_vehicle %} text-gray-700 font-medium
+                                {% else %} text-gray-400 italic
+                                {% endif %}">
+                                {% if profile.assigned_vehicle %}
+                                    {{ profile.assigned_vehicle.name }}
+                                {% else %}
+                                    Non Assigné
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="py-4 px-6 text-center text-gray-500">Aucun profil de pompier actif trouvé.</td></tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+        
+        <footer class="mt-12 text-center text-sm text-gray-400 border-t pt-6">
+            Tableau de Bord Opérationnel | Données en temps réel via Django
+        </footer>
+    </div>
+
+
+
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 1. GESTION DU MENU MOBILE ---
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIconOpen = document.getElementById('menu-icon-open');
+            const menuIconClose = document.getElementById('menu-icon-close');
+
+            menuToggle.addEventListener('click', () => {
+                const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true' || false;
+                menuToggle.setAttribute('aria-expanded', !isExpanded);
+                mobileMenu.classList.toggle('hidden');
+                menuIconOpen.classList.toggle('hidden');
+                menuIconClose.classList.toggle('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

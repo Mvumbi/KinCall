@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinshasa Fire Alert | Connexion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* S'assurer que le body occupe toute la hauteur */
+        html, body { height: 100%; }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-2xl">
+        <div class="text-center">
+            <h1 class="text-3xl font-extrabold text-gray-900">
+                🚨 KinCall
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+                Connectez-vous pour signaler un incendie ou gérer les interventions.
+            </p>
+        </div>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-3 text-sm rounded-lg 
+                    {% if message.tags == 'error' %} bg-red-100 text-red-700
+                    {% elif message.tags == 'success' %} bg-green-100 text-green-700
+                    {% else %} bg-blue-100 text-blue-700
+                    {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label for="{{ form.username.id_for_label }}" class="sr-only">Nom d'utilisateur</label>
+                {{ form.username }}
+            </div>
+
+            <div>
+                <label for="{{ form.password.id_for_label }}" class="sr-only">Mot de passe</label>
+                {{ form.password }}
+            </div>
+            
+            <button type="submit" 
+                    class="w-full flex justify-center py-3 px-4 border border-transparent 
+                           rounded-lg shadow-sm text-sm font-medium text-white 
+                           bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 
+                           focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
+                Se Connecter
+            </button>
+        </form>
+
+        <div class="text-center">
+            <a href="{% url 'citizen_register' %}" class="font-medium text-sm text-blue-600 hover:text-blue-500">
+                Pas encore de compte citoyen? S'inscrire
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>
